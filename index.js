@@ -1,64 +1,22 @@
-var blessed = require('blessed');
+const blessed = require('blessed');
+const snoowrap = require('snoowrap');
+const config = require('./config.json');
+
+const r = new snoowrap({
+    userAgent: 'User-Agent: console:reddit-cli:v0.1.0 (by /u/drewwyatt)',
+    accessToken: config.accessToken
+});
+
+// {
+//     "scope": "account read report save submit subscribe vote"
+// }
 
 // Create a screen object.
-var screen = blessed.screen({
+const screen = blessed.screen({
     smartCSR: true
 });
 
-screen.title = 'my window title';
-
-// Create a box perfectly centered horizontally and vertically.
-// var box = blessed.box({
-//     top: 'center',
-//     left: 'center',
-//     width: '50%',
-//     height: '50%',
-//     content: 'Hello {bold}world{/bold}!',
-//     tags: true,
-//     border: {
-//     type: 'line'
-//     },
-//     style: {
-//     fg: 'white',
-//     bg: 'magenta',
-//     border: {
-//         fg: '#f0f0f0'
-//     },
-//     hover: {
-//         bg: 'green'
-//     }
-//     }
-// });
-
-// Append our box to the screen.
-// screen.append(box);
-
-// Add a png icon to the box
-// var icon = blessed.image({
-//     parent: box,
-//     top: 0,
-//     left: 0,
-//     type: 'overlay',
-//     width: 'shrink',
-//     height: 'shrink',
-//     file: __dirname + '/my-program-icon.png',
-//     search: false
-// });
-
-// // If our box is clicked, change the content.
-// box.on('click', function(data) {
-//     box.setContent('{center}Some different {red-fg}content{/red-fg}.{/center}');
-//     screen.render();
-// });
-
-// // If box is focused, handle `enter`/`return` and give us some more content.
-// box.key('enter', function(ch, key) {
-//     box.setContent('{right}Even different {black-fg}content{/black-fg}.{/right}\n');
-//     box.setLine(1, 'bar');
-//     box.insertLine(1, 'foo');
-//     screen.render();
-// });
-
+screen.title = 'reddit-cli';
 
 const list = blessed.list({
     top: '0',
@@ -81,13 +39,15 @@ const list = blessed.list({
             bold: true
         }
     },
-    items: [
-        'foo',
-        'bar',
-        'baz'
-    ],
     keys: true
 });
+
+r.getHot().map(submissionToListablePost).then(list.setItems.bind(list));
+
+function submissionToListablePost(submission) {
+    return [`[${submission.id}]`, submission.title, `(by /u/${submission.author.name})`].join(' ');
+}
+
 
 screen.append(list);
 
